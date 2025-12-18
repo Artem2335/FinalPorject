@@ -9,6 +9,8 @@ from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.templating import Jinja2Templates
+from fastapi import Request
 from app.users.router import router as router_users
 from app.movies.router import router as router_movies
 from app.reviews.router import router as router_reviews
@@ -59,8 +61,12 @@ app.include_router(router_favorites)
 # Setup SQLAdmin
 setup_admin(app)
 
-# Get the correct path for static files
+# Get the correct paths for static files and templates
 STATIC_DIR = Path(__file__).parent / "static"
+TEMPLATES_DIR = Path(__file__).parent / "templates"
+
+# Setup Jinja2 templates
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # Mount static files
 if STATIC_DIR.exists():
@@ -68,10 +74,10 @@ if STATIC_DIR.exists():
 else:
     print(f"\n⚠️ Warning: Static directory not found at {STATIC_DIR}")
 
-# Root redirect
+# Root route - serve index.html from templates
 @app.get('/')
-async def root():
-    return RedirectResponse(url="/static/index.html", status_code=status.HTTP_303_SEE_OTHER)
+async def root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 if __name__ == "__main__":
     import uvicorn
