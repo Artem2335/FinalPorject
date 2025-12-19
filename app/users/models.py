@@ -8,7 +8,7 @@ class User(Base):
     id: Mapped[int_pk]
     email: Mapped[str_uniq]
     password: Mapped[str]
-    username: Mapped[str]
+    username: Mapped[str] = mapped_column(String(10), nullable=False)
 
     is_user: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_moderator: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
