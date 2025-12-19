@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from app import db
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
+from typing import Optional
 import jwt
 import json
 
@@ -25,7 +26,16 @@ pwd_context = CryptContext(
 class UserRegister(BaseModel):
     email: EmailStr
     password: str
-    username: str
+    username: str = Field(..., min_length=1, max_length=10, description="Username must be between 1 and 10 characters")
+
+    @field_validator('username')
+    @classmethod
+    def validate_username(cls, v):
+        if len(v) > 10:
+            raise ValueError('Username must not exceed 10 characters')
+        if len(v) < 1:
+            raise ValueError('Username must not be empty')
+        return v
 
 
 class UserLogin(BaseModel):
@@ -34,9 +44,20 @@ class UserLogin(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    email: EmailStr = None
-    username: str = None
-    password: str = None
+    email: Optional[EmailStr] = None
+    username: Optional[str] = Field(None, min_length=1, max_length=10, description="Username must be between 1 and 10 characters")
+    password: Optional[str] = None
+
+    @field_validator('username', mode='before')
+    @classmethod
+    def validate_username(cls, v):
+        if v is None:
+            return v
+        if len(v) > 10:
+            raise ValueError('Username must not exceed 10 characters')
+        if len(v) < 1:
+            raise ValueError('Username must not be empty')
+        return v
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
